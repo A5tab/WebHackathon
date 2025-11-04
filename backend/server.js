@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from 'cors';
 
 import forumRoutes from './routes/forumRoutes.js';
-import authRoutes from './routes/authRoutes.js';
+import marketItemRoutes from "./routes/marketItemRoutes.js";
 
 const app = express();
 
@@ -25,6 +25,16 @@ app.on("error", (err, req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use('/api/auth', authRoutes);
+
+app.get("/test", (req, res) => {
+    res.json({ message: "Test Route: Server is up and running" });
+})
+
+app.use("/api/market-items", marketItemRoutes);
+
+app.use('/api/forum', forumRoutes);
+
 const PORT = process.env.PORT || 5000;
 (async function () {
     try {
@@ -39,10 +49,5 @@ const PORT = process.env.PORT || 5000;
     }
 })();
 
-app.use('/api/auth', authRoutes);
-app.get("/test", (req, res) => {
-    res.json({ message: "Test Route: Server is up and running" });
-})
 
-app.use('/api/forum', forumRoutes);
 
