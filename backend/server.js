@@ -22,3 +22,7 @@ const PORT = process.env.PORT || 5000;
         process.exit(1);
     }
 })();
+
+app.get("/test", (req, res) => {
+    res.json({ message: "Test Route: Server is up and running" });
+})
