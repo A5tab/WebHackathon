@@ -4,6 +4,10 @@ import mongoose from 'mongoose';
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from 'cors';
+
+import forumRoutes from './routes/forumRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+
 const app = express();
 
 app.use(cors({ origin: process.env.CORS, credentials: true }));
@@ -18,6 +22,8 @@ app.on("error", (err, req, res, next) => {
     console.log(err);
     res.status(500).send(err);
 });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 5000;
 (async function () {
@@ -37,4 +43,6 @@ app.use('/api/auth', authRoutes);
 app.get("/test", (req, res) => {
     res.json({ message: "Test Route: Server is up and running" });
 })
+
+app.use('/api/forum', forumRoutes);
 
