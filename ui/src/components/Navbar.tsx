@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Leaf, Menu, X } from "lucide-react";
 import { LoginModal } from "./LoginModal";
 import { AdminLoginModal } from "./AdminLoginModal";
-
+import { useAuth } from "@/hooks/useAuth";
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [adminLoginModalOpen, setAdminLoginModalOpen] = useState(false);
+
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -37,14 +39,18 @@ export const Navbar = () => {
             </div>
 
             {/* Desktop Auth Buttons */}
-            <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
-                Login (Farmer)
+            {
+              !user ? (<div className="hidden md:flex items-center gap-3">
+                <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
+                  Login (Farmer)
+                </Button>
+                <Button variant="outline" onClick={() => setAdminLoginModalOpen(true)}>
+                  Admin
+                </Button>
+              </div>) : <Button variant="hero" onClick={() => logout()}>
+                Logout
               </Button>
-              <Button variant="outline" onClick={() => setAdminLoginModalOpen(true)}>
-                Admin
-              </Button>
-            </div>
+            }
 
             {/* Mobile Menu Button */}
             <button
