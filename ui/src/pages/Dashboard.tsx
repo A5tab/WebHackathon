@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, TrendingDown, Cloud, Lightbulb, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-
+import { useAuth } from "@/hooks/useAuth";
 // Mock market data
 const marketData = [
   { id: 1, name: "Tomato", price: 120, unit: "kg", trend: 3, region: "Lahore", sparkline: [110, 112, 115, 118, 119, 121, 120] },
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("lahore");
 
+  const {user} = useAuth();
   const filteredData = marketData.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -32,10 +33,6 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Farmer Dashboard</h1>
           <p className="text-muted-foreground">Track market prices and weather insights</p>
         </div>
