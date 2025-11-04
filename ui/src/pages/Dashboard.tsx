@@ -20,6 +20,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import axiosInstance from "@/api/axios";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MarketItem {
   _id: string;
@@ -43,7 +45,7 @@ interface WeatherData {
 
 // Default sparkline data
 const defaultSparkline = [0, 0, 0, 0, 0, 0, 0];
-import { useAuth } from "@/hooks/useAuth";
+
 // Mock market data
 const marketData = [
   { id: 1, name: "Tomato", price: 120, unit: "kg", trend: 3, region: "Lahore", sparkline: [110, 112, 115, 118, 119, 121, 120] },
@@ -63,6 +65,7 @@ const Dashboard = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [advice, setAdvice] = useState("");
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const { user } = useAuth();
 
   // --- Fetch Market and Weather Data ---
   useEffect(() => {
@@ -153,11 +156,9 @@ const Dashboard = () => {
     generateAdvice();
   }, [weatherData, filteredData]);
 
-  const { user } = useAuth();
   const filteredMockData = marketData.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,8 +181,6 @@ const Dashboard = () => {
           <p className="text-muted-foreground">
             Track market prices and weather insights
           </p>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Farmer Dashboard</h1>
-          <p className="text-muted-foreground">Track market prices and weather insights</p>
         </div>
 
         {/* Search and Filter */}
@@ -252,30 +251,37 @@ const Dashboard = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                          {/* Mini Sparkline */}
-                          <svg
-                            className="w-24 h-12 hidden md:block"
-                            viewBox="0 0 100 40"
-                          >
-                            <polyline
-                              fill="none"
-                              stroke="hsl(var(--primary))"
-                              strokeWidth="2"
-                              points={item.sparkline
-                                .map((val, i) => {
-                                  const x =
-                                    (i / (item.sparkline.length - 1)) * 100;
-                                  const y =
-                                    40 -
-                                    ((val - Math.min(...item.sparkline)) /
-                                      (Math.max(...item.sparkline) -
-                                        Math.min(...item.sparkline))) *
-                                    30;
-                                  return `${x},${y}`;
-                                })
-                                .join(" ")}
-                            />
-                          </svg>
+                          {/* ✅ Sparkline using Recharts */}
+                          <div className="w-32 h-12 hidden md:block">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={item.sparkline.map((v, i) => ({
+                                  index: i,
+                                  value: v,
+                                }))}
+                              >
+                                <Line
+                                  type="monotone"
+                                  dataKey="value"
+                                  stroke="hsl(var(--primary))"
+                                  strokeWidth={2}
+                                  dot={false}
+                                />
+                                <XAxis dataKey="index" hide />
+                                <YAxis domain={["dataMin", "dataMax"]} hide />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#fff",
+                                    borderRadius: "8px",
+                                  }}
+                                  formatter={(value: number) => [
+                                    `${value} PKR/kg`,
+                                    "Price",
+                                  ]}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
 
                           {/* Trend */}
                           <div
