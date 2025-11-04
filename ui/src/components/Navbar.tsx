@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Leaf, Menu, X } from "lucide-react";
 import { LoginModal } from "./LoginModal";
 import { AdminLoginModal } from "./AdminLoginModal";
+import {useAuth} from "@/hooks/useAuth";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [adminLoginModalOpen, setAdminLoginModalOpen] = useState(false);
 
+  const { user ,logout } = useAuth();
   return (
     <>
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -45,12 +47,23 @@ export const Navbar = () => {
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
-                Login (Farmer)
-              </Button>
-              <Button variant="outline" onClick={() => setAdminLoginModalOpen(true)}>
-                Admin
-              </Button>
+              {user ? (
+                <>
+                  <span className="text-foreground">Welcome, {user.name}</span>
+                  <Button variant="hero" onClick={() => logout()}>
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" onClick={() => setLoginModalOpen(true)}>
+                    Login (Farmer)
+                  </Button>
+                  <Button variant="outline" onClick={() => setAdminLoginModalOpen(true)}>
+                    Admin
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -111,26 +124,46 @@ export const Navbar = () => {
               </a>
 
               <div className="pt-2 space-y-2">
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => {
-                    setLoginModalOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  Login (Farmer)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setAdminLoginModalOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  Admin
-                </Button>
+                {user ? (
+                  <>
+                    <span className="block text-foreground text-center pb-2">
+                      Welcome, {user.name}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        setLoginModalOpen(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Login (Farmer)
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setAdminLoginModalOpen(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Admin
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

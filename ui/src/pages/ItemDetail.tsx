@@ -4,17 +4,33 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, MessageSquare, Cloud, Lightbulb } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
-// Mock detailed data
+// Generate last 7 days of prices with random fluctuations
+const generatePrices = () => {
+  const basePrice = 115; // Base price in PKR
+  const dates = [];
+  const prices = [];
+  
+  for (let i = 7; i >= 1; i--) {
+    const date = new Date(2025, 10, 4 - i); // November 4, 2025 as reference
+    dates.push(date.toISOString().split('T')[0]);
+    
+    // Generate random price fluctuation between -5 and +5 PKR
+    const fluctuation = Math.floor(Math.random() * 10) - 5;
+    prices.push(basePrice + fluctuation);
+  }
+  
+  return dates.map((date, index) => ({
+    date,
+    price: prices[index]
+  }));
+};
+
+// Mock detailed data with random prices
 const itemDetails = {
-  1: { name: "Tomato", prices: [
-    { date: "2025-10-27", price: 110 },
-    { date: "2025-10-28", price: 112 },
-    { date: "2025-10-29", price: 115 },
-    { date: "2025-10-30", price: 118 },
-    { date: "2025-10-31", price: 119 },
-    { date: "2025-11-01", price: 121 },
-    { date: "2025-11-02", price: 120 },
-  ]},
+  1: { 
+    name: "Tomato",
+    prices: generatePrices()
+  },
 };
 
 const ItemDetail = () => {
@@ -124,54 +140,6 @@ const ItemDetail = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Weather */}
-            <Card className="border-2 border-accent/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Cloud className="h-5 w-5 text-accent" />
-                  Weather
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center space-y-2">
-                  <div className="text-4xl font-bold">28°C</div>
-                  <div className="text-sm text-muted-foreground">Lahore</div>
-                  <div className="text-sm">Humidity: 70%</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Smart Advice */}
-            <Card className="border-2 border-primary/20 bg-primary/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-accent" />
-                  Smart Advice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm">
-                  <strong>Tomato prices rising</strong> — consider selling within next 2 days.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Reason: Prices increased 3% in last 7 days and weather is favorable.
-                </p>
-                <p className="text-xs text-muted-foreground">Source: AI-based</p>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <div className="space-y-2">
-              <Button className="w-full" variant="hero">Compare Prices</Button>
-              <Button className="w-full" variant="outline" onClick={() => navigate("/forum")}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                View Forum Posts
-              </Button>
-            </div>
           </div>
         </div>
       </div>

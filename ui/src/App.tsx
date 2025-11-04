@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
 import Map from "./pages/PakistanMap"
+import ItemDetail from "./pages/ItemDetail";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -29,7 +30,9 @@ const App = () => (
         <Route element={<ProtectedRoute allowedRoles={["farmer"]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/forum" element={<Forum />} />
+          <Route path="/weather" element={<Weather />} />
           <Route path="/pakistan-map" element={<Map />} />
+          <Route path="/item/:id" element={<ItemDetail />} />
         </Route>
 
         {/* Admin Protected Route */}
