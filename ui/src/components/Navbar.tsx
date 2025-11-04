@@ -24,6 +24,9 @@ export const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
+              <a href="/weather" className="text-foreground hover:text-primary transition-colors">
+                Weather
+              </a>
               <a href="#features" className="text-foreground hover:text-primary transition-colors">
                 Features
               </a>
@@ -66,6 +69,13 @@ export const Navbar = () => {
           {/* Mobile Menu */}
           {isMobileMenuOpen && (
             <div className="md:hidden py-4 space-y-4 border-t border-border">
+              <a
+                href="/weather"
+                className="block text-foreground hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Weather
+              </a>
               <a
                 href="#features"
                 className="block text-foreground hover:text-primary transition-colors"
@@ -116,6 +126,6 @@ export const Navbar = () => {
 
       <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
       <AdminLoginModal open={adminLoginModalOpen} onOpenChange={setAdminLoginModalOpen} />
-    </>
-  );
+  </>
+);
 };
