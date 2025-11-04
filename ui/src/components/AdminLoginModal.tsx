@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axiosInstance from "../../src/api/axios.js";
+import { useAuth } from "@/hooks/useAuth.js";
 
 interface AdminLoginModalProps {
   open: boolean;
@@ -13,7 +14,7 @@ interface AdminLoginModalProps {
 }
 
 export const AdminLoginModal = ({ open, onOpenChange }: AdminLoginModalProps) => {
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   // 🧠 Manage form state
   const [email, setEmail] = useState("");
@@ -33,9 +34,8 @@ export const AdminLoginModal = ({ open, onOpenChange }: AdminLoginModalProps) =>
 
       if (response.data?.token) {
         toast.success("✅ Admin login successful!");
-        localStorage.setItem("token", response.data.token); // store token
+        login(response.data.token, response.data.role, response.data.user.name);
         onOpenChange(false);
-        navigate("/admin"); // redirect to admin dashboard
       } else {
         toast.error("Invalid credentials");
       }
