@@ -9,6 +9,7 @@ import ItemDetail from "./pages/ItemDetail";
 import Admin from "./pages/Admin";
 import Forum from "./pages/Forum";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -20,10 +21,18 @@ const App = () => (
 
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/item/:id" element={<ItemDetail />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/forum" element={<Forum />} />
+
+        {/* Farmer Protected Route */}
+        <Route element={<ProtectedRoute allowedRoles={["farmer"]} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/forum" element={<Forum />} />
+        </Route>
+
+        {/* Admin Protected Route */}
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
+
         <Route path="*" element={<NotFound />} />
       </Routes>
 

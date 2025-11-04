@@ -10,7 +10,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   if (loading) return <p>Loading...</p>;
 
-  if (!user?.token) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   if (allowedRoles && !allowedRoles.includes(user.role!))
     return <Navigate to="/" replace />;

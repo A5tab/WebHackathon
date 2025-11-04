@@ -34,6 +34,7 @@ export const AdminLoginModal = ({ open, onOpenChange }: AdminLoginModalProps) =>
 
       if (response.data?.token) {
         toast.success("✅ Admin login successful!");
+        console.log(response.data);
         login(response.data.token, response.data.role, response.data.user.name);
         onOpenChange(false);
       } else {
