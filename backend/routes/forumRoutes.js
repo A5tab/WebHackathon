@@ -10,21 +10,21 @@ import {
   updateComment,
   deleteComment,
 } from "../controllers/forumController.js";
-// import { protect } from "../middleware/authMiddleware.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // POSTS
-router.post("/posts", createPost);
+router.post("/posts", authMiddleware, createPost);
 router.get("/posts", getAllPosts);
 router.get("/posts/:id", getSinglePost);
-router.put("/posts/:id", updatePost);
-router.delete("/posts/:id", deletePost);
+router.put("/posts/:id", authMiddleware, updatePost);
+router.delete("/posts/:id", authMiddleware, deletePost);
 
 // COMMENTS
-router.post("/posts/:id/comments", createComment);
+router.post("/posts/:id/comments", authMiddleware, createComment);
 router.get("/posts/:id/comments", getCommentsByPost);
-router.put("/comments/:id", updateComment);
-router.delete("/comments/:id", deleteComment);
+router.put("/comments/:id", authMiddleware, updateComment);
+router.delete("/comments/:id", authMiddleware, deleteComment);
 
 export default router;
