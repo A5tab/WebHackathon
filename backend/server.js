@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import forumRoutes from './routes/forumRoutes.js';
 const app = express();
 
 dotenv.config();
@@ -8,6 +9,8 @@ app.on("error", (err, req, res, next) => {
     console.log(err);
     res.status(500).send(err);
 });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 5000;
 (async function () {
@@ -22,3 +25,8 @@ const PORT = process.env.PORT || 5000;
         process.exit(1);
     }
 })();
+
+app.use('/api/forums', forumRoutes);
+
+
+
