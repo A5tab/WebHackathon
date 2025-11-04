@@ -5,10 +5,33 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Upload, Plus, Search, Edit, Trash2, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
+import { AddItemModal } from "@/components/ui/AddItemModal";
+import { toast } from "sonner";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const handleAddItem = async (itemData: unknown) => {
+    try {
+      // You can implement the API call here
+      // const response = await axios.post(${import.meta.env.VITE_API_URL}/api/market-items/add, itemData);
+      // If itemData is FormData, log its entries for debugging
+      if (itemData instanceof FormData) {
+        for (const pair of itemData.entries()) {
+          console.log(pair[0], pair[1]);
+        }
+      } else {
+        console.log("Adding item:", itemData);
+      }
+      toast.success("Item added successfully");
+      // You might want to refresh the items list here
+    } catch (error) {
+      console.error("Error adding item:", error);
+      toast.error("Failed to add item");
+    }
+  };
 
   const stats = [
     { title: "Total Entries", value: "342", icon: TrendingUp },
@@ -63,15 +86,22 @@ const Admin = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="accent">
+          <Button variant="ghost">
             <Upload className="mr-2 h-4 w-4" />
             Upload Daily CSV
           </Button>
-          <Button variant="hero">
+          <Button variant="hero" onClick={() => setAddModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Item
           </Button>
         </div>
+
+        {/* Add Item Modal */}
+        <AddItemModal 
+          open={addModalOpen}
+          onOpenChange={setAddModalOpen}
+          onAddItem={handleAddItem}
+        />
 
         {/* Items Table */}
         <Card>
