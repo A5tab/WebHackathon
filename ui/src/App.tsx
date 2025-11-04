@@ -37,7 +37,7 @@ const App = () => (
 
         <Route path="*" element={<NotFound />} />
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin" element={<Weather />} />
+          <Route path="/weather" element={<Weather />} />
         </Route>
       </Routes>
 
