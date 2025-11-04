@@ -1,47 +1,56 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface AddItemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddItem: (item: FormData) => void;
+  onAddItem: (item: FormData) => Promise<void>;
 }
 
-export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProps) => {
+export const AddItemModal = ({
+  open,
+  onOpenChange,
+  onAddItem,
+}: AddItemModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    price: "",
+    pricePerKg: "",
+    region: "",
+    date: "",
   });
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const categories = [
-    "Vegetables",
-    "Fruits",
-    "Grains",
-    "Pulses",
-    "Spices",
-    "Dairy",
-    "Meat",
-    "Poultry",
-    "Others"
-  ];
+  // ✅ Match backend enum values exactly
+  const categories = ["Fruit", "Vegetable"];
+  const regions = ["Federal", "Punjab", "Sindh", "Balochistan", "KPK"];
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -50,39 +59,40 @@ export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProp
     e.preventDefault();
     setLoading(true);
 
+    const { name, category, pricePerKg, region, date } = formData;
+
+    if (!name || !category || !pricePerKg || !region) {
+      toast.error("Please fill in all required fields");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Validate form
-      if (!formData.name || !formData.category || !formData.price || !selectedImage) {
-        toast.error("Please fill in all required fields and upload an image");
-        setLoading(false);
-        return;
-      }
-
-      // Create FormData object
       const submitData = new FormData();
-      submitData.append('name', formData.name);
-      submitData.append('category', formData.category);
-      submitData.append('price', formData.price);
-      if (selectedImage) {
-        submitData.append('image', selectedImage);
-      }
+      submitData.append("name", name);
+      submitData.append("category", category);
+      submitData.append("pricePerKg", pricePerKg);
+      submitData.append("region", region);
+      if (date) submitData.append("date", date);
+      if (selectedImage) submitData.append("image", selectedImage);
 
-      // Call the onAddItem prop with the FormData
       await onAddItem(submitData);
-      
-      // Reset form and close modal
+
+      // Reset after success
       setFormData({
         name: "",
         category: "",
-        price: "",
+        pricePerKg: "",
+        region: "",
+        date: "",
       });
       setSelectedImage(null);
       setImagePreview(null);
       onOpenChange(false);
-      toast.success("Item added successfully");
+      toast.success("Item added successfully!");
     } catch (error) {
-      toast.error("Failed to add item");
       console.error("Error adding item:", error);
+      toast.error("Failed to add item. Please check your inputs.");
     } finally {
       setLoading(false);
     }
@@ -92,18 +102,23 @@ export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">Add Market Item</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold">
+            Add Market Item
+          </DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Item Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Item Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Tomato, Potato, etc."
+              placeholder="e.g., Mango, Tomato"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full"
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              required
             />
           </div>
 
@@ -112,10 +127,12 @@ export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProp
             <Label htmlFor="category">Category</Label>
             <Select
               value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category: value })
+              }
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a category" />
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -127,35 +144,72 @@ export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProp
             </Select>
           </div>
 
-          {/* Price per kg */}
+          {/* Price per Kg */}
           <div className="space-y-2">
-            <Label htmlFor="price">Price (PKR / kg)</Label>
+            <Label htmlFor="pricePerKg">Price (PKR/kg)</Label>
             <Input
-              id="price"
+              id="pricePerKg"
               type="number"
-              step="0.01"
+              min="0"
               placeholder="Enter price per kg"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="w-full"
+              value={formData.pricePerKg}
+              onChange={(e) =>
+                setFormData({ ...formData, pricePerKg: e.target.value })
+              }
+              required
             />
           </div>
 
-          {/* Image Upload */}
+          {/* Region */}
           <div className="space-y-2">
-            <Label htmlFor="image">Image</Label>
+            <Label htmlFor="region">Region</Label>
+            <Select
+              value={formData.region}
+              onValueChange={(value) =>
+                setFormData({ ...formData, region: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select region" />
+              </SelectTrigger>
+              <SelectContent>
+                {regions.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Date (optional)</Label>
+            <Input
+              id="date"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+            />
+          </div>
+
+          {/* Image */}
+          <div className="space-y-2">
+            <Label htmlFor="image">Image (optional)</Label>
             <Input
               id="image"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="block w-full text-sm text-muted-foreground"
             />
-
             {imagePreview && (
-              <div className="mt-2">
-                <img src={imagePreview} alt="preview" className="h-28 w-auto rounded shadow" />
-              </div>
+              <img
+                src={imagePreview}
+                alt="preview"
+                className="h-28 w-auto rounded-md mt-2 shadow"
+              />
             )}
           </div>
 
@@ -169,18 +223,13 @@ export const AddItemModal = ({ open, onOpenChange, onAddItem }: AddItemModalProp
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <span className="animate-spin mr-2">⭮</span>
-                  Adding...
-                </>
-              ) : (
-                "Add Item"
-              )}
+              {loading ? "Adding..." : "Add Item"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-    );
+  );
 };
+
+export default AddItemModal;

@@ -1,48 +1,133 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Upload, Plus, Search, Edit, Trash2, TrendingUp } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Upload, Plus, Search, Edit, Trash2, TrendingUp } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { AddItemModal } from "@/components/ui/AddItemModal";
+import { EditItemModal } from "@/components/ui/EditItemModal";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import axiosInstance from "../api/axios.js";
+import { it } from "node:test";
 
 const Admin = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { user } = useAuth();
 
-  const handleAddItem = async (itemData: unknown) => {
+  // Add item handler
+  const handleAddItem = async (formData: FormData) => {
     try {
-      // You can implement the API call here
-      // const response = await axios.post(${import.meta.env.VITE_API_URL}/api/market-items/add, itemData);
-      // If itemData is FormData, log its entries for debugging
-      if (itemData instanceof FormData) {
-        for (const pair of itemData.entries()) {
-          console.log(pair[0], pair[1]);
-        }
+      const token = localStorage.getItem("token");
+      const res = await axiosInstance.post("/market-items/add", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.data?.item) {
+        toast.success("Item added successfully!");
+        setAddModalOpen(false);
+        setItems((prev) => [...prev, res.data.item]);
       } else {
-        console.log("Adding item:", itemData);
+        toast.error(res.data?.message || "Error adding item");
       }
-      toast.success("Item added successfully");
-      // You might want to refresh the items list here
-    } catch (error) {
-      console.error("Error adding item:", error);
-      toast.error("Failed to add item");
+    } catch (error: any) {
+      console.error("Error adding item:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to add item");
     }
   };
 
-  const stats = [
-    { title: "Total Entries", value: "342", icon: TrendingUp },
-    { title: "Items Count", value: "50", icon: Plus },
-    { title: "Avg Price Today", value: "75 PKR", icon: TrendingUp },
-  ];
+  // Delete item handler
+  const handleDeleteItem = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
 
-  const items = [
-    { id: 1, name: "Tomato", region: "Lahore", price: 120, updated: "2025-11-02" },
-    { id: 2, name: "Potato", region: "Lahore", price: 45, updated: "2025-11-02" },
-    { id: 3, name: "Onion", region: "Karachi", price: 85, updated: "2025-11-02" },
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axiosInstance.delete(`/market-items/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 200) {
+        setItems((prev) => prev.filter((item) => item._id !== id));
+        toast.success("Item deleted successfully!");
+      } else {
+        toast.error(res.data?.message || "Error deleting item");
+      }
+    } catch (error: any) {
+      console.error("Error deleting item:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to delete item");
+    }
+  };
+
+  // Update item handler (passed to modal)
+  const handleUpdateItem = async (id, formData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axiosInstance.put(`/market-items/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.data?.item) {
+        toast.success("Item updated successfully!");
+        setItems((prev) =>
+          prev.map((i) => (i._id === id ? res.data.item : i))
+        );
+        setEditModalOpen(false);
+      } else {
+        toast.error(res.data?.message || "Error updating item");
+      }
+    } catch (error) {
+      console.error("Error updating item:", error.response?.data || error.message);
+      toast.error(error.response?.data?.message || "Failed to update item");
+    }
+  };
+
+  // Fetch items from API
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const token = localStorage.getItem("token");
+
+        const res = await axiosInstance.get("/market-items", {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { search: searchQuery },
+        });
+
+        if (res.data) {
+          setItems(res.data);
+        } else {
+          setItems([]);
+          toast.info("No items found.");
+        }
+      } catch (error: any) {
+        console.error("Error fetching items:", error.response?.data || error.message);
+        setError(error.response?.data?.message || "Failed to fetch items");
+        toast.error("Failed to load market items");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [searchQuery]);
+
+  const stats = [
+    { title: "Total Entries", value: items.length.toString(), icon: TrendingUp },
+    { title: "Items Count", value: items.length.toString(), icon: Plus },
+    { title: "Avg Price Today", value: items.length ? (items.reduce((acc, curr) => acc + curr.pricePerKg, 0) / items.length).toFixed(2) + " PKR" : "N/A", icon: TrendingUp },
   ];
 
   return (
@@ -50,13 +135,10 @@ const Admin = () => {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
-
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+            Admin Dashboard
+          </h1>
           <p className="text-muted-foreground">Manage market data and items</p>
         </div>
 
@@ -65,11 +147,15 @@ const Admin = () => {
           {stats.map((stat) => (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {stat.title}
+                </CardTitle>
                 <stat.icon className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                <div className="text-3xl font-bold text-foreground">
+                  {stat.value}
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -97,10 +183,18 @@ const Admin = () => {
         </div>
 
         {/* Add Item Modal */}
-        <AddItemModal 
+        <AddItemModal
           open={addModalOpen}
           onOpenChange={setAddModalOpen}
           onAddItem={handleAddItem}
+        />
+
+        {/* Edit Item Modal */}
+        <EditItemModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          item={selectedItem}
+          onUpdate={handleUpdateItem}
         />
 
         {/* Items Table */}
@@ -113,26 +207,59 @@ const Admin = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Item</th>
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Region</th>
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Latest Price</th>
-                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">Last Updated</th>
-                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">Actions</th>
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                      Item
+                    </th>
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                      Region
+                    </th>
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                      Latest Price
+                    </th>
+                    <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                      Last Updated
+                    </th>
+                    <th className="text-right py-3 px-4 text-muted-foreground font-medium">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
-                      <td className="py-4 px-4 font-medium text-foreground">{item.name}</td>
-                      <td className="py-4 px-4 text-foreground">{item.region}</td>
-                      <td className="py-4 px-4 text-foreground">{item.price} PKR/kg</td>
-                      <td className="py-4 px-4 text-muted-foreground">{item.updated}</td>
+                    <tr
+                      key={item._id}
+                      className="border-b border-border hover:bg-secondary/30"
+                    >
+                      <td className="py-4 px-4 font-medium text-foreground">
+                        {item.name}
+                      </td>
+                      <td className="py-4 px-4 text-foreground">
+                        {item.region}
+                      </td>
+                      <td className="py-4 px-4 text-foreground">
+                        {item.pricePerKg} PKR/kg
+                      </td>
+                      <td className="py-4 px-4 text-muted-foreground">
+                        {new Date(item.updatedAt).toLocaleString()}
+                      </td>
                       <td className="py-4 px-4">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setEditModalOpen(true);
+                            }}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteItem(item._id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
@@ -141,6 +268,16 @@ const Admin = () => {
                   ))}
                 </tbody>
               </table>
+              {loading && (
+                <p className="text-center text-muted-foreground py-4">
+                  Loading items...
+                </p>
+              )}
+              {!loading && items.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">
+                  No items found.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

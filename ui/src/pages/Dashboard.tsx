@@ -43,6 +43,15 @@ interface WeatherData {
 
 // Default sparkline data
 const defaultSparkline = [0, 0, 0, 0, 0, 0, 0];
+import { useAuth } from "@/hooks/useAuth";
+// Mock market data
+const marketData = [
+  { id: 1, name: "Tomato", price: 120, unit: "kg", trend: 3, region: "Lahore", sparkline: [110, 112, 115, 118, 119, 121, 120] },
+  { id: 2, name: "Potato", price: 45, unit: "kg", trend: -2, region: "Lahore", sparkline: [48, 47, 46, 46, 45, 45, 45] },
+  { id: 3, name: "Onion", price: 80, unit: "kg", trend: 5, region: "Lahore", sparkline: [72, 74, 76, 77, 78, 79, 80] },
+  { id: 4, name: "Carrot", price: 60, unit: "kg", trend: 1, region: "Lahore", sparkline: [58, 59, 59, 60, 60, 60, 60] },
+  { id: 5, name: "Cabbage", price: 35, unit: "kg", trend: -1, region: "Lahore", sparkline: [36, 36, 35, 35, 35, 35, 35] },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -144,6 +153,12 @@ const Dashboard = () => {
     generateAdvice();
   }, [weatherData, filteredData]);
 
+  const { user } = useAuth();
+  const filteredMockData = marketData.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -165,6 +180,8 @@ const Dashboard = () => {
           <p className="text-muted-foreground">
             Track market prices and weather insights
           </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Farmer Dashboard</h1>
+          <p className="text-muted-foreground">Track market prices and weather insights</p>
         </div>
 
         {/* Search and Filter */}
@@ -253,7 +270,7 @@ const Dashboard = () => {
                                     ((val - Math.min(...item.sparkline)) /
                                       (Math.max(...item.sparkline) -
                                         Math.min(...item.sparkline))) *
-                                      30;
+                                    30;
                                   return `${x},${y}`;
                                 })
                                 .join(" ")}
@@ -262,11 +279,10 @@ const Dashboard = () => {
 
                           {/* Trend */}
                           <div
-                            className={`flex items-center gap-1 ${
-                              item.trend > 0
+                            className={`flex items-center gap-1 ${item.trend > 0
                                 ? "text-green-600"
                                 : "text-red-600"
-                            }`}
+                              }`}
                           >
                             {item.trend > 0 ? (
                               <TrendingUp className="h-5 w-5" />
