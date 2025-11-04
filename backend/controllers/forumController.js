@@ -5,14 +5,29 @@ import Comment from "../models/comment.js";
 export const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
+    console.log("Creating post for user:", req.user);
+    
+    if (!req.user?._id) {
+      return res.status(401).json({ message: "You must be logged in to create a post" });
+    }
+
     const post = await Post.create({
       title,
       content,
       author: req.user._id,
     });
-    res.status(201).json(post);
+
+    // Immediately populate the author details for the frontend
+    const populatedPost = await Post.findById(post._id)
+      .populate("author", "name email");
+
+    res.status(201).json(populatedPost);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Create post error:", error);
+    res.status(500).json({ 
+      message: error.message || "Failed to create post",
+      details: error.errors?.author?.message || error.message
+    });
   }
 };
 

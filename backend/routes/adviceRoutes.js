@@ -1,58 +1,61 @@
 import express from "express";
-import axios from "axios";
-import dotenv from "dotenv";
 
-dotenv.config();
 const router = express.Router();
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// --- Function: Generate rule-based advice ---
+const generateRuleBasedAdvice = (weather, market) => {
+  const { condition, temperature, humidity } = weather;
+  const { name, price, trend } = market;
 
-// Basic prompt template
-const generatePrompt = (weather, market) => `
-You are an agricultural assistant. Based on the following data, give a short and useful farming advice (max 2 sentences).
+  const lowerCondition = condition.toLowerCase();
 
-Weather Info:
-Condition: ${weather.condition}
-Temperature: ${weather.temperature}°C
-Humidity: ${weather.humidity}%
+  // --- Weather-based rules ---
+  if (lowerCondition.includes("rain")) {
+    return "🌧️ Avoid watering your crops today — rain is expected.";
+  }
+  if (lowerCondition.includes("cloud") && humidity > 70) {
+    return "☁️ Cloudy with high humidity — reduce watering frequency.";
+  }
+  if (temperature > 35) {
+    return "☀️ Hot weather detected — ensure proper irrigation during morning or evening hours.";
+  }
+  if (temperature < 10) {
+    return "❄️ Cold conditions — protect young seedlings from frost.";
+  }
 
-Market Info:
-Crop: ${market.name}
-Current Price: Rs.${market.price}/kg
-Trend: ${market.trend}
+  // --- Market-based rules ---
+  if (trend > 0) {
+    return `📈 ${name} prices are rising — consider selling within the next few days.`;
+  }
+  if (trend < 0) {
+    return `📉 ${name} prices are falling — hold off selling until the market stabilizes.`;
+  }
 
-Provide advice relevant to farmers.
-`;
+  // --- Humidity-based rules ---
+  if (humidity > 80) {
+    return "💧 High humidity — monitor for fungal diseases and ensure proper air circulation.";
+  }
+  if (humidity < 30) {
+    return "🌵 Low humidity — consider light irrigation to prevent crop stress.";
+  }
 
-router.post("/", async (req, res) => {
+  // --- Default fallback ---
+  return "🌿 Conditions are stable — continue regular farming practices.";
+};
+
+// --- POST Route ---
+router.post("/", (req, res) => {
   try {
     const { weather, market } = req.body;
-    const prompt = generatePrompt(weather, market);
 
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-      {
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY,
-        },
-      }
-    );
+    if (!weather || !market) {
+      return res.status(400).json({ message: "Missing weather or market data" });
+    }
 
-    const advice =
-      response.data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No advice generated.";
-
+    const advice = generateRuleBasedAdvice(weather, market);
     res.json({ advice });
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.error("Advice generation error:", error.message);
     res.status(500).json({ message: "Failed to generate advice" });
   }
 });

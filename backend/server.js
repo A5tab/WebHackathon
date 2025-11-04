@@ -8,6 +8,7 @@ import cors from 'cors';
 import forumRoutes from './routes/forumRoutes.js';
 import marketItemRoutes from "./routes/marketItemRoutes.js";
 import weatherRoutes from "./routes/weatherRoutes.js";
+import adviceRoutes from "./routes/adviceRoutes.js";
 
 const app = express();
 
@@ -37,6 +38,8 @@ app.use("/api/market-items", marketItemRoutes);
 app.use('/api/forum', forumRoutes);
 
 app.use('/api/weather', weatherRoutes);
+
+app.use('/api/advice', adviceRoutes);
 
 const PORT = process.env.PORT || 5000;
 (async function () {
