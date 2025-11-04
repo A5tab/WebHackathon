@@ -6,7 +6,7 @@ import User from "../models/user.js";
 export const register = async (req, res) => {
     try {
         const { name, username, email, password, role } = req.body;
-
+        
         const existingUser = await User.findOne({ username });
         if (existingUser) return res.status(400).json({ message: "User already exists" });
 
@@ -21,7 +21,7 @@ export const register = async (req, res) => {
         );
 
         res.
-            cookies('jwt-token', token, {
+            cookie('jwt-token', token, {
                 maxAge: 86400000,  // for one day (in milliseconds)
                 httpOnly: true,
                 secure: true,
@@ -54,7 +54,7 @@ export const login = async (req, res) => {
         );
 
         res.
-            cookies('jwt-token', token, {
+            cookie('jwt-token', token, {
                 maxAge: 86400000,  // for one day (in milliseconds)
                 httpOnly: true,
                 secure: true,
@@ -69,3 +69,12 @@ export const login = async (req, res) => {
         res.status(500).json({ message: "Login failed", error: error.message });
     }
 };
+
+export const logout = async (req, res) => {
+    try {
+        res.clearCookie('jwt-token');
+        res.status(200).json({ message: "Logout successful" });
+    } catch (error) {
+        res.status(500).json({ message: "Logout failed", error: error.message });
+    }
+}
