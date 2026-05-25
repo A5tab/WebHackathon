@@ -1,20 +1,21 @@
 import Post from "../models/Post.js";
 import Comment from "../models/comment.js";
 
-// ✅ Create a new Post
+// Create a new Post
 export const createPost = async (req, res) => {
   try {
     const { title, content } = req.body;
+    const userId = req.user?._id || req.user?.id;
     console.log("Creating post for user:", req.user);
     
-    if (!req.user?._id) {
+    if (!userId) {
       return res.status(401).json({ message: "You must be logged in to create a post" });
     }
 
     const post = await Post.create({
       title,
       content,
-      author: req.user._id,
+      author: userId,
     });
 
     // Immediately populate the author details for the frontend
@@ -31,7 +32,7 @@ export const createPost = async (req, res) => {
   }
 };
 
-// ✅ Get all Posts
+// Get all Posts
 export const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
@@ -44,7 +45,7 @@ export const getAllPosts = async (req, res) => {
   }
 };
 
-// ✅ Get single Post
+// Get single Post
 export const getSinglePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
@@ -62,14 +63,15 @@ export const getSinglePost = async (req, res) => {
   }
 };
 
-// ✅ Update Post
+// Update Post
 export const updatePost = async (req, res) => {
   try {
     const { title, content } = req.body;
     const post = await Post.findById(req.params.id);
+    const userId = req.user?._id || req.user?.id;
 
     if (!post) return res.status(404).json({ message: "Post not found" });
-    if (post.author.toString() !== req.user._id.toString())
+    if (!userId || post.author.toString() !== userId.toString())
       return res.status(403).json({ message: "Unauthorized" });
 
     post.title = title || post.title;
@@ -82,12 +84,13 @@ export const updatePost = async (req, res) => {
   }
 };
 
-// ✅ Delete Post
+// Delete Post
 export const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
+    const userId = req.user?._id || req.user?.id;
     if (!post) return res.status(404).json({ message: "Post not found" });
-    if (post.author.toString() !== req.user._id.toString())
+    if (!userId || post.author.toString() !== userId.toString())
       return res.status(403).json({ message: "Unauthorized" });
 
     await Comment.deleteMany({ post: post._id });
@@ -99,16 +102,18 @@ export const deletePost = async (req, res) => {
   }
 };
 
-// ✅ Create Comment
+// Create Comment
 export const createComment = async (req, res) => {
   try {
     const { commentText } = req.body;
     const post = await Post.findById(req.params.id);
+    const userId = req.user?._id || req.user?.id;
     if (!post) return res.status(404).json({ message: "Post not found" });
+    if (!userId) return res.status(401).json({ message: "You must be logged in to comment" });
 
     const comment = await Comment.create({
       commentText,
-      author: req.user._id,
+      author: userId,
       post: post._id,
     });
 
@@ -121,7 +126,7 @@ export const createComment = async (req, res) => {
   }
 };
 
-// ✅ Get Comments for a Post
+// Get Comments for a Post
 export const getCommentsByPost = async (req, res) => {
   try {
     const comments = await Comment.find({ post: req.params.id })
@@ -133,14 +138,15 @@ export const getCommentsByPost = async (req, res) => {
   }
 };
 
-// ✅ Update Comment
+// Update Comment
 export const updateComment = async (req, res) => {
   try {
     const { commentText } = req.body;
     const comment = await Comment.findById(req.params.id);
+    const userId = req.user?._id || req.user?.id;
 
     if (!comment) return res.status(404).json({ message: "Comment not found" });
-    if (comment.author.toString() !== req.user._id.toString())
+    if (!userId || comment.author.toString() !== userId.toString())
       return res.status(403).json({ message: "Unauthorized" });
 
     comment.commentText = commentText || comment.commentText;
@@ -152,14 +158,15 @@ export const updateComment = async (req, res) => {
   }
 };
 
-// ✅ Delete Comment
+// Delete Comment
 export const deleteComment = async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
+    const userId = req.user?._id || req.user?.id;
     if (!comment)
       return res.status(404).json({ message: "Comment not found" });
 
-    if (comment.author.toString() !== req.user._id.toString())
+    if (!userId || comment.author.toString() !== userId.toString())
       return res.status(403).json({ message: "Unauthorized" });
 
     await comment.deleteOne();

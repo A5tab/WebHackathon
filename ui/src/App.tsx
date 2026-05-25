@@ -25,6 +25,7 @@ const App = () => (
 
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Index />} />
 
         {/* Farmer Protected Route */}
         <Route element={<ProtectedRoute allowedRoles={["farmer"]} />}>

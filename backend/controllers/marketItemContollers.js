@@ -2,7 +2,7 @@ import fs from "fs";
 import cloudinary from "../config/cloudinary.js";
 import MarketItem from "../models/marketItem.js";
 
-// ➕ Create Item with Image Upload
+// Create Item with Image Upload
 export const addItem = async (req, res) => {
   try {
     const { name, category, pricePerKg, region, date } = req.body;
@@ -44,7 +44,7 @@ export const addItem = async (req, res) => {
   }
 };
 
-// 📖 Get All Items
+// Get All Items
 export const getItems = async (req, res) => {
   try {
     const { search = "" } = req.query;
@@ -59,7 +59,7 @@ export const getItems = async (req, res) => {
   }
 };
 
-// ✏️ Update Item (and replace image if uploaded)
+// Update Item (and replace image if uploaded)
 export const updateItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -94,7 +94,7 @@ export const updateItem = async (req, res) => {
   }
 };
 
-// ❌ Delete Item (remove from DB and Cloudinary)
+// Delete Item (remove from DB and Cloudinary)
 export const deleteItem = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,6 +1,6 @@
 
 import express from "express";
-import { register, login } from "../controllers/authControllers.js";
+import { register, login, logout } from "../controllers/authControllers.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -12,6 +12,6 @@ router.post("/login", login);
 router.get("/me", authMiddleware, (req, res) => {
   res.json({ message: "Authenticated route", user: req.user });
 });
-router.post("/logout", authMiddleware, (req, res) => {});
+router.post("/logout", authMiddleware, logout);
 
 export default router;

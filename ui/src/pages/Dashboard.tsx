@@ -20,6 +20,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import axiosInstance from "@/api/axios";
+import { useAuth } from "@/hooks/useAuth";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 interface MarketItem {
   _id: string;
@@ -43,7 +45,6 @@ interface WeatherData {
 
 // Default sparkline data
 const defaultSparkline = [0, 0, 0, 0, 0, 0, 0];
-import { useAuth } from "@/hooks/useAuth";
 // Mock market data
 const marketData = [
   { id: 1, name: "Tomato", price: 120, unit: "kg", trend: 3, region: "Lahore", sparkline: [110, 112, 115, 118, 119, 121, 120] },
@@ -76,7 +77,7 @@ const Dashboard = () => {
         setError("");
       } catch (err) {
         console.error("Market fetch error:", err);
-        setError("Failed to fetch market items");
+        setError(getApiErrorMessage(err, "Failed to fetch market items"));
       } finally {
         setLoading(false);
       }
@@ -146,7 +147,7 @@ const Dashboard = () => {
         setAdvice(response.data.advice || "No advice available right now.");
       } catch (err) {
         console.error("Failed to generate advice:", err);
-        setAdvice("Unable to generate advice at this time.");
+        setAdvice(getApiErrorMessage(err, "Unable to generate advice at this time."));
       }
     };
 

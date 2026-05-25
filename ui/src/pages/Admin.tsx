@@ -9,7 +9,7 @@ import { EditItemModal } from "@/components/ui/EditItemModal";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "../api/axios.js";
-import { it } from "node:test";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 const Admin = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,8 +40,8 @@ const Admin = () => {
         toast.error(res.data?.message || "Error adding item");
       }
     } catch (error: any) {
-      console.error("Error adding item:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to add item");
+      console.error("Error adding item:", error);
+      toast.error(getApiErrorMessage(error, "Failed to add item"));
     }
   };
 
@@ -62,8 +62,8 @@ const Admin = () => {
         toast.error(res.data?.message || "Error deleting item");
       }
     } catch (error: any) {
-      console.error("Error deleting item:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to delete item");
+      console.error("Error deleting item:", error);
+      toast.error(getApiErrorMessage(error, "Failed to delete item"));
     }
   };
 
@@ -88,8 +88,8 @@ const Admin = () => {
         toast.error(res.data?.message || "Error updating item");
       }
     } catch (error) {
-      console.error("Error updating item:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Failed to update item");
+      console.error("Error updating item:", error);
+      toast.error(getApiErrorMessage(error, "Failed to update item"));
     }
   };
 
@@ -113,9 +113,9 @@ const Admin = () => {
           toast.info("No items found.");
         }
       } catch (error: any) {
-        console.error("Error fetching items:", error.response?.data || error.message);
-        setError(error.response?.data?.message || "Failed to fetch items");
-        toast.error("Failed to load market items");
+        console.error("Error fetching items:", error);
+        setError(getApiErrorMessage(error, "Failed to fetch items"));
+        toast.error(getApiErrorMessage(error, "Failed to load market items"));
       } finally {
         setLoading(false);
       }

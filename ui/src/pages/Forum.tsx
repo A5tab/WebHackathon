@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 interface Comment {
   _id: string;
@@ -163,7 +164,6 @@ const Forum = () => {
       setIsSubmitting(true);
       const response = await axiosInstance.post("/forum/posts", {
         ...newPost,
-        author: user.token, // Add author ID from the auth context
       });
       
       // If the post is created successfully, fetch the updated post list
@@ -177,10 +177,9 @@ const Forum = () => {
         description: "Post created successfully",
       });
     } catch (err) {
-      const error = err as Error & { response?: { status?: number; data?: { message?: string; details?: string } } };
-      const errorMessage = error.response?.data?.message || error.response?.data?.details || "Failed to create post";
+      const errorMessage = getApiErrorMessage(err, "Failed to create post");
       
-      if (error.response?.status === 401) {
+      if (errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("logged in")) {
         toast({
           title: "Session Expired",
           description: "Please log in again to continue",
@@ -213,9 +212,8 @@ const Forum = () => {
         setPosts(response.data);
         setError("");
       } catch (err) {
-        const error = err as Error & { response?: { data?: { message?: string } } };
-        console.error("Failed to fetch posts:", error.response?.data || error);
-        setError(error.response?.data?.message || "Failed to load posts. Please try again later.");
+          console.error("Failed to fetch posts:", err);
+          setError(getApiErrorMessage(err, "Failed to load posts. Please try again later."));
       } finally {
         setLoading(false);
       }

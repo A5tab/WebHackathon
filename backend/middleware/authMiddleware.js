@@ -5,13 +5,13 @@ export const authMiddleware = (req, res, next) => {
     // Log cookies for debugging
     console.log("Cookies:", req.cookies);
 
-    // ✅ Fix: use bracket syntax for cookie with hyphen
+    // Fix: use bracket syntax for cookie with hyphen
     const cookieToken = req.cookies?.["jwt-token"];
     const headerAuth = req.headers.authorization;
 
     let token;
 
-    // ✅ Priority: Authorization header → cookie
+    // Priority: Authorization header → cookie
     if (headerAuth && headerAuth.startsWith("Bearer ")) {
       token = headerAuth.split(" ")[1];
     } else if (cookieToken) {
@@ -22,9 +22,13 @@ export const authMiddleware = (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    // ✅ Verify token
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach decoded payload
+    req.user = {
+      ...decoded,
+      _id: decoded._id || decoded.id,
+      id: decoded.id || decoded._id,
+    }; // attach normalized decoded payload
 
     console.log("Decoded user:", decoded);
     next();

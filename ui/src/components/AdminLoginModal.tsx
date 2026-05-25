@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import axiosInstance from "../../src/api/axios.js";
+import axiosInstance from "@/api/axios";
 import { useAuth } from "@/hooks/useAuth.js";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 interface AdminLoginModalProps {
   open: boolean;
@@ -22,6 +23,12 @@ export const AdminLoginModal = ({ open, onOpenChange }: AdminLoginModalProps) =>
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setError("");
+    }
+  }, [open]);
 
   // 🔐 Handle admin login
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -42,7 +49,7 @@ export const AdminLoginModal = ({ open, onOpenChange }: AdminLoginModalProps) =>
         toast.error("Invalid credentials");
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || "Login failed. Please try again.";
+      const message = getApiErrorMessage(err, "Login failed. Please try again.");
       setError(message);
       toast.error(`❌ ${message}`);
     } finally {

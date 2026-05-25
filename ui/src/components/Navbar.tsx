@@ -1,16 +1,33 @@
-import { useState } from "react"; 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Leaf, Menu, X } from "lucide-react";
 import { LoginModal } from "./LoginModal";
 import { AdminLoginModal } from "./AdminLoginModal";
-import {useAuth} from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [adminLoginModalOpen, setAdminLoginModalOpen] = useState(false);
 
-  const { user ,logout } = useAuth();
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (location.pathname === "/login") {
+      setLoginModalOpen(true);
+    }
+  }, [location.pathname]);
+
+  const handleLoginModalChange = (open: boolean) => {
+    setLoginModalOpen(open);
+
+    if (!open && location.pathname === "/login") {
+      navigate("/");
+    }
+  };
   return (
     <>
       <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -170,7 +187,7 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
+      <LoginModal open={loginModalOpen} onOpenChange={handleLoginModalChange} />
       <AdminLoginModal open={adminLoginModalOpen} onOpenChange={setAdminLoginModalOpen} />
     </>
   );

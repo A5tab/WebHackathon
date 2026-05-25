@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axios";
+import { getApiErrorMessage } from "@/lib/apiError";
 
 interface User {
   name?: string;
@@ -34,6 +35,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setUser(null);
+      navigate("/");
+    };
+
+    window.addEventListener("auth:expired", handleAuthExpired);
+
+    return () => window.removeEventListener("auth:expired", handleAuthExpired);
+  }, [navigate]);
+
   //  Login function
   const login = (token: string, role: "admin" | "farmer", name?: string) => {
     localStorage.setItem("token", token);
@@ -62,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       );
     } catch (error: any) {
-      console.warn("Logout API failed:", error.response?.data || error.message);
+      console.warn("Logout API failed:", getApiErrorMessage(error, "Logout failed"));
     } finally {
       localStorage.clear();
       setUser(null);

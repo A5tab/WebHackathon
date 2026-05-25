@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth.js";
 import { toast } from "sonner";
 import axiosInstance from "@/api/axios"; // make sure this has http://localhost:5000/api baseURL
+import { getApiErrorMessage } from "@/lib/apiError";
 
 interface LoginModalProps {
   open: boolean;
@@ -32,6 +33,12 @@ export const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setError("");
+    }
+  }, [open, isLogin]);
 
   // 🧩 Handle Input Changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +66,7 @@ export const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
         toast.error("Invalid credentials");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Login failed. Please try again.";
+      const msg = getApiErrorMessage(err, "Login failed. Please try again.");
       setError(msg);
       toast.error(`❌ ${msg}`);
     } finally {
@@ -81,22 +88,29 @@ export const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
     }
 
     try {
+      const username =
+        formData.email.split("@")[0].trim().replace(/[^a-zA-Z0-9_]/g, "") ||
+        formData.name.trim().toLowerCase().replace(/\s+/g, "-");
+
       const response = await axiosInstance.post("/auth/register", {
         name: formData.name,
+        username,
+        email: formData.email,
         phone: formData.phone,
         region: formData.region,
         password: formData.password,
+        role: "farmer",
       });
 
-      if (response.data?.success) {
+      if (response.status === 201 && response.data?.token) {
         toast.success("🎉 Account created successfully!");
-        login(response.data.token, response.data.role, response.data.user.name)
+        login(response.data.token, response.data.role, response.data.user.name);
         onOpenChange(false);
       } else {
         toast.error("Failed to create account");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Registration failed. Please try again.";
+      const msg = getApiErrorMessage(err, "Registration failed. Please try again.");
       setError(msg);
       toast.error(`❌ ${msg}`);
     } finally {
@@ -169,6 +183,17 @@ export const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="register-email">Email</Label>
+                <Input
+                  id="register-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="register-phone">Phone Number</Label>
                 <Input
                   id="register-phone"
@@ -207,9 +232,9 @@ export const LoginModal = ({ open, onOpenChange }: LoginModalProps) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="register-confirm">Confirm Password</Label>
+                <Label htmlFor="register-confirmPassword">Confirm Password</Label>
                 <Input
-                  id="register-confirm"
+                  id="register-confirmPassword"
                   type="password"
                   placeholder="Confirm password"
                   value={formData.confirmPassword}
